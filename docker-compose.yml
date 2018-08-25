@@ -1,0 +1,27 @@
+version: '2'
+
+services:
+  _base:
+    image: gradle:4.8.1-jdk8
+    volumes:
+      - .:/app
+      - gradle-cache:/home/gradle/.gradle
+    working_dir: /app
+    environment:
+      GRADLE_USER_HOME: /home/gradle/.gradle
+
+  dev:
+    extends:
+      service: _base
+
+  api:
+    extends:
+      service: _base
+    command: "gradle bootRun"
+    environment:
+      TERM: xterm
+    ports:
+      - "8080:8080"
+
+volumes:
+  gradle-cache:
