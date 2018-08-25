@@ -7,8 +7,6 @@ services:
       - .:/app
       - gradle-cache:/home/gradle/.gradle
     working_dir: /app
-    environment:
-      GRADLE_USER_HOME: /home/gradle/.gradle
 
   dev:
     extends:
