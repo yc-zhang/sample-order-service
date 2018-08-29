@@ -3,6 +3,7 @@ version: '2'
 services:
   _base:
     image: gradle:4.8.1-jdk8
+    user: root
     volumes:
       - .:/app
       - gradle-cache:/home/gradle/.gradle

@@ -3,8 +3,8 @@ pipeline {
     stages {
         stage('build') {
             steps {
-                sh 'sudo docker ps -a'
-                sh 'sudo ./auto/test.sh'
+                sh 'docker ps -a'
+                sh './auto/test.sh'
             }
         }
     }
