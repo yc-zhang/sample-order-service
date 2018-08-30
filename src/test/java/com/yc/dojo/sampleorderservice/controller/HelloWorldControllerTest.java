@@ -11,7 +11,6 @@ import static org.springframework.http.HttpStatus.OK;
 public class HelloWorldControllerTest {
     @Test
     public void shouldReturnGreeting() {
-        // let's test
         HelloWorldController controller = new HelloWorldController();
         ResponseEntity<Greeting> responseEntity = controller.getCollectionDetails("yc");
         
