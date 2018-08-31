@@ -13,6 +13,7 @@ docker build -t ${LOCAL_IMAGE_NAME} .
 docker tag ${LOCAL_IMAGE_NAME} ${REMOTE_IMAGE_NAME}:latest
 docker tag ${LOCAL_IMAGE_NAME} ${REMOTE_IMAGE_NAME}:${VERSION}
 
-#wired
-#docker push ${REMOTE_IMAGE_NAME}:${VERSION}
-#docker push ${REMOTE_IMAGE_NAME}:latest
+$(aws ecr get-login --no-include-email --region ap-northeast-2) # let's login for this guy
+
+docker push ${REMOTE_IMAGE_NAME}:${VERSION}
+docker push ${REMOTE_IMAGE_NAME}:latest
