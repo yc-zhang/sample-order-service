@@ -4,7 +4,7 @@ pipeline {
         stage('build') {
             steps {
                 sh './auto/test.sh'
-                sh './build-image.sh'
+                sh './auto/build-image.sh'
             }
         }
     }
