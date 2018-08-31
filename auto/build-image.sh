@@ -13,5 +13,6 @@ docker build -t ${LOCAL_IMAGE_NAME} .
 docker tag ${LOCAL_IMAGE_NAME} ${REMOTE_IMAGE_NAME}:latest
 docker tag ${LOCAL_IMAGE_NAME} ${REMOTE_IMAGE_NAME}:${VERSION}
 
+#wired
 #docker push ${REMOTE_IMAGE_NAME}:${VERSION}
 #docker push ${REMOTE_IMAGE_NAME}:latest
