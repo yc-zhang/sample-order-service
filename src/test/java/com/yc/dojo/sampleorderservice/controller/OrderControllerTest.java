@@ -2,8 +2,10 @@ package com.yc.dojo.sampleorderservice.controller;
 
 import com.yc.dojo.sampleorderservice.controller.request.Item;
 import com.yc.dojo.sampleorderservice.controller.request.OrderRequest;
-import com.yc.dojo.sampleorderservice.controller.response.Order;
 import com.yc.dojo.sampleorderservice.controller.response.OrderDetailResponse;
+import com.yc.dojo.sampleorderservice.controller.response.OrderItem;
+import com.yc.dojo.sampleorderservice.controller.response.OrderListResponse;
+import com.yc.dojo.sampleorderservice.controller.response.OrderSummary;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.ResponseEntity;
@@ -21,9 +23,10 @@ import static org.springframework.http.HttpStatus.ACCEPTED;
 import static org.springframework.http.HttpStatus.OK;
 
 public class OrderControllerTest {
-    
+    private final static Instant FAKE_INSTANT = Instant.ofEpochSecond(1534353561L);
     private OrderRequest orderRequest;
     private List<Item> items;
+    private OrderController controller;
     
     @Before
     public void setUp() throws Exception {
@@ -32,11 +35,12 @@ public class OrderControllerTest {
         orderRequest = new OrderRequest();
         orderRequest.setItems(items);
         orderRequest.setCustomer("sample-customer");
+    
+        controller = new OrderController();
     }
     
     @Test
     public void shouldCreateOrder() {
-        OrderController controller = new OrderController();
         ResponseEntity responseEntity = controller.createOrder(orderRequest);
      
         assertThat(responseEntity.getStatusCode(), is(ACCEPTED));
@@ -44,22 +48,35 @@ public class OrderControllerTest {
     }
     
     @Test
-    public void shouldReturnOrderDetail() {
-        List<Order> orders = Arrays.asList(
-                new Order("apple", 10, new BigDecimal(BigInteger.valueOf(1000), 2)),
-                new Order("banana", 22, new BigDecimal(BigInteger.valueOf(2200), 2))
+    public void shouldReturnOrderList() {
+        List<OrderSummary> summaries = Arrays.asList(
+                new OrderSummary(1, FAKE_INSTANT),
+                new OrderSummary(5, FAKE_INSTANT)
         );
         
-        Instant created = Instant.ofEpochSecond(1534353561L);
+        ResponseEntity<OrderListResponse> responseEntity = controller.getOrderList("sample-customer");
         
-        OrderController controller = new OrderController();
+        assertThat(responseEntity.getStatusCode(), is(OK));
+        
+        OrderListResponse orderList = responseEntity.getBody();
+        assertThat(orderList.getCount(), is(2));
+        assertThat(orderList.getOrderSummaries(), is(summaries));
+    }
+    
+    @Test
+    public void shouldReturnOrderDetail() {
+        List<OrderItem> orders = Arrays.asList(
+                new OrderItem("apple", 10, new BigDecimal(BigInteger.valueOf(1000), 2)),
+                new OrderItem("banana", 22, new BigDecimal(BigInteger.valueOf(2200), 2))
+        );
+        
         ResponseEntity<OrderDetailResponse> responseEntity = controller.getOrderDetail("sample-customer", 20);
     
         OrderDetailResponse orderDetailResponse = responseEntity.getBody();
         assertThat(responseEntity.getStatusCode(), is(OK));
         assertThat(orderDetailResponse.getTotalPrice(), is(new BigDecimal(BigInteger.valueOf(3200), 2)));
-        assertThat(orderDetailResponse.getOrders(), is(orders));
-        assertThat(orderDetailResponse.getCreated(), is(created));
+        assertThat(orderDetailResponse.getOrderItems(), is(orders));
+        assertThat(orderDetailResponse.getCreated(), is(FAKE_INSTANT));
     }
     
     private Item createItem(String name, Integer amount) {

@@ -2,12 +2,12 @@ package com.yc.dojo.sampleorderservice.controller.response;
 
 import java.math.BigDecimal;
 
-public class Order {
+public class OrderItem {
     private final String name;
     private final Integer amount;
     private final BigDecimal totalPrice;
     
-    public Order(final String name, final Integer amount, final BigDecimal totalPrice) {
+    public OrderItem(final String name, final Integer amount, final BigDecimal totalPrice) {
         this.name = name;
         this.amount = amount;
         this.totalPrice = totalPrice;
@@ -29,12 +29,12 @@ public class Order {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+    
+        OrderItem orderItem = (OrderItem) o;
         
-        Order order = (Order) o;
-        
-        if (name != null ? !name.equals(order.name) : order.name != null) return false;
-        if (amount != null ? !amount.equals(order.amount) : order.amount != null) return false;
-        return totalPrice != null ? totalPrice.equals(order.totalPrice) : order.totalPrice == null;
+        if (name != null ? !name.equals(orderItem.name) : orderItem.name != null) return false;
+        if (amount != null ? !amount.equals(orderItem.amount) : orderItem.amount != null) return false;
+        return totalPrice != null ? totalPrice.equals(orderItem.totalPrice) : orderItem.totalPrice == null;
     }
     
     @Override
