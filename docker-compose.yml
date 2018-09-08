@@ -8,6 +8,11 @@ services:
       - .:/app
       - gradle-cache:/home/gradle/.gradle
     working_dir: /app
+    environment:
+      DB_NAME: order
+      DB_HOST: postgres
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
 
   dev:
     extends:
@@ -19,8 +24,22 @@ services:
     command: "gradle bootRun"
     environment:
       TERM: xterm
+      FLYWAY_LOCATIONS: classpath:db/migration
+    depends_on:
+      - postgres
     ports:
       - "8080:8080"
+
+  postgres:
+    image: postgres:9.5
+    volumes:
+      - ./support/:/docker-entrypoint-initdb.d/
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: order
+    ports:
+      - "5432:5432"
 
 volumes:
   gradle-cache:
