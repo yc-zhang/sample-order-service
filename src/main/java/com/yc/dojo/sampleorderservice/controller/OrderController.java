@@ -5,6 +5,11 @@ import com.yc.dojo.sampleorderservice.controller.response.OrderDetailResponse;
 import com.yc.dojo.sampleorderservice.controller.response.OrderItem;
 import com.yc.dojo.sampleorderservice.controller.response.OrderListResponse;
 import com.yc.dojo.sampleorderservice.controller.response.OrderSummary;
+import com.yc.dojo.sampleorderservice.model.Item;
+import com.yc.dojo.sampleorderservice.model.Order;
+import com.yc.dojo.sampleorderservice.repository.ItemRepository;
+import com.yc.dojo.sampleorderservice.repository.OrderRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,11 +23,24 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+
+import static java.util.stream.Collectors.toList;
 
 @RestController
 public class OrderController {
-    private final static Instant FAKE_INSTANT = Instant.ofEpochSecond(1534353561L);
+    private final static BigDecimal FAKE_TOTAL_PRICE = new BigDecimal(BigInteger.valueOf(1000), 2);
+
+    private final OrderRepository orderRepository;
+    private final ItemRepository itemRepository;
+    
+    @Autowired
+    public OrderController(OrderRepository orderRepository, ItemRepository itemRepository) {
+        this.orderRepository = orderRepository;
+        this.itemRepository = itemRepository;
+    }
     
     @RequestMapping(value = "/order", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity createOrder(@Valid @RequestBody OrderRequest orderRequest) {
@@ -31,34 +49,35 @@ public class OrderController {
     
     @RequestMapping(value = "/{customer}/order", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<OrderListResponse> getOrderList(@PathVariable String customer) {
-        return ResponseEntity.ok(buildDummyOrderListResponse());
+        List<Order> orders = orderRepository.findByCustomer(customer);
+        return ResponseEntity.ok(buildOrderListResponse(orders));
     }
     
     
     @RequestMapping(value = "/{customer}/order/{orderId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<OrderDetailResponse> getOrderDetail(@PathVariable String customer, @PathVariable Integer orderId) {
-        return ResponseEntity.ok(buildDummyOrderResponse());
+        Optional<Order> order = orderRepository.findByIdAndCustomer(orderId, customer);
+
+        List<Item> items = order.map(Order::getId).map(itemRepository::findByOrderId).orElse(Collections.emptyList());
+    
+        Instant created = order.map(Order::getCreated).orElse(null);
+        
+        return ResponseEntity.ok(buildOrderResponse(items, created));
     }
     
-    private OrderListResponse buildDummyOrderListResponse() {
-        List<OrderSummary> summaries = Arrays.asList(
-                new OrderSummary(1, FAKE_INSTANT),
-                new OrderSummary(5, FAKE_INSTANT)
-        );
+    private OrderListResponse buildOrderListResponse(List<Order> orders) {
+        List<OrderSummary> summaries = orders.stream().map(o -> new OrderSummary(o.getId(), o.getCreated())).collect(toList());
         return new OrderListResponse(summaries, summaries.size());
     }
     
-    private OrderDetailResponse buildDummyOrderResponse() {
-        List<OrderItem> orders = Arrays.asList(
-                new OrderItem("apple", 10, new BigDecimal(BigInteger.valueOf(1000), 2)),
-                new OrderItem("banana", 22, new BigDecimal(BigInteger.valueOf(2200), 2))
-        );
-        
+    private OrderDetailResponse buildOrderResponse(List<Item> items, Instant created) {
+        List<OrderItem> orders = items.stream().map(i -> new OrderItem(i.getName(), i.getAmount(), FAKE_TOTAL_PRICE)).collect(toList());
+    
         BigDecimal total = orders.stream()
                 .map(OrderItem::getTotalPrice)
                 .reduce(BigDecimal::add)
                 .orElse(BigDecimal.ZERO);
         
-        return new OrderDetailResponse(orders, total, FAKE_INSTANT);
+        return new OrderDetailResponse(orders, total, created);
     }
 }
