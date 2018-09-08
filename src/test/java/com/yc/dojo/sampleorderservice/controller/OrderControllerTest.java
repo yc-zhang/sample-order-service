@@ -1,11 +1,13 @@
 package com.yc.dojo.sampleorderservice.controller;
 
-import com.yc.dojo.sampleorderservice.controller.request.Item;
+import com.yc.dojo.sampleorderservice.controller.request.ItemRequest;
 import com.yc.dojo.sampleorderservice.controller.request.OrderRequest;
 import com.yc.dojo.sampleorderservice.controller.response.OrderDetailResponse;
 import com.yc.dojo.sampleorderservice.controller.response.OrderListResponse;
 import com.yc.dojo.sampleorderservice.controller.response.OrderSummary;
+import com.yc.dojo.sampleorderservice.model.Item;
 import com.yc.dojo.sampleorderservice.model.Order;
+import com.yc.dojo.sampleorderservice.service.OrderPersistService;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.ResponseEntity;
@@ -27,24 +29,25 @@ import static org.springframework.http.HttpStatus.OK;
 public class OrderControllerTest {
     private final static Instant FAKE_INSTANT = Instant.ofEpochSecond(1534353561L);
     private OrderRequest orderRequest;
-    private List<Item> items;
+    private List<ItemRequest> itemRequests;
     private OrderController controller;
     
     private TestOrderRepository testOrderRepository;
     private TestItemRepository testItemRepository;
+    private boolean persisted = false;
     
     @Before
     public void setUp() throws Exception {
-        items = Arrays.asList(createItem("apple", 10), createItem("banana", 20));
+        itemRequests = Arrays.asList(createItem("apple", 10), createItem("banana", 20));
     
         orderRequest = new OrderRequest();
-        orderRequest.setItems(items);
+        orderRequest.setItems(itemRequests);
         orderRequest.setCustomer("sample-customer");
     
         testOrderRepository = new TestOrderRepository();
         testItemRepository = new TestItemRepository();
-        
-        controller = new OrderController(testOrderRepository, testItemRepository);
+        persisted = false;
+        controller = new OrderController(testOrderRepository, testItemRepository, p -> persisted = true);
     }
     
     @Test
@@ -53,6 +56,7 @@ public class OrderControllerTest {
      
         assertThat(responseEntity.getStatusCode(), is(ACCEPTED));
         assertThat(responseEntity.getBody(), nullValue());
+        assertThat(persisted, is(true));
     }
     
     @Test
@@ -100,7 +104,7 @@ public class OrderControllerTest {
     
         testOrderRepository.setSampleOrder(Optional.of(order));
     
-        List<com.yc.dojo.sampleorderservice.model.Item> items = Arrays.asList(
+        List<Item> items = Arrays.asList(
                 createModelItem("apple"),
                 createModelItem("banana")
         );
@@ -125,18 +129,18 @@ public class OrderControllerTest {
         
     }
     
-    private com.yc.dojo.sampleorderservice.model.Item createModelItem(String name) {
-        com.yc.dojo.sampleorderservice.model.Item item = new com.yc.dojo.sampleorderservice.model.Item();
+    private Item createModelItem(String name) {
+        Item item = new Item();
         item.setAmount(10);
         item.setName(name);
         item.setCreated(FAKE_INSTANT);
         return item;
     }
     
-    private Item createItem(String name, Integer amount) {
-        Item item = new Item();
-        item.setAmount(amount);
-        item.setName(name);
-        return item;
+    private ItemRequest createItem(String name, Integer amount) {
+        ItemRequest itemRequest = new ItemRequest();
+        itemRequest.setAmount(amount);
+        itemRequest.setName(name);
+        return itemRequest;
     }
 }

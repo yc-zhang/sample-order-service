@@ -4,7 +4,10 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import java.time.Instant;
 
@@ -12,6 +15,8 @@ import java.time.Instant;
 @Table(name = "items")
 public class Item {
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="items_id_seq")
+    @SequenceGenerator(name="items_id_seq", sequenceName="items_id_seq", allocationSize=1)
     private Integer id;
     
     private Integer orderId;

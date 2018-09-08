@@ -2,7 +2,7 @@ package com.yc.dojo.sampleorderservice.controller.request;
 
 import javax.validation.constraints.NotNull;
 
-public class Item {
+public class ItemRequest {
     @NotNull
     private String name;
     

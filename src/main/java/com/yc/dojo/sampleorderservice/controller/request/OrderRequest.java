@@ -11,7 +11,7 @@ public class OrderRequest {
     private String customer;
     
     @NotNull
-    private List<Item> items;
+    private List<ItemRequest> items;
     
     public String getCustomer() {
         return customer;
@@ -21,11 +21,11 @@ public class OrderRequest {
         this.customer = customer;
     }
     
-    public List<Item> getItems() {
+    public List<ItemRequest> getItems() {
         return items;
     }
     
-    public void setItems(List<Item> items) {
-        this.items = items;
+    public void setItems(List<ItemRequest> itemRequests) {
+        this.items = itemRequests;
     }
 }

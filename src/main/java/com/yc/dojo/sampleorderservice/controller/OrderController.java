@@ -9,7 +9,9 @@ import com.yc.dojo.sampleorderservice.model.Item;
 import com.yc.dojo.sampleorderservice.model.Order;
 import com.yc.dojo.sampleorderservice.repository.ItemRepository;
 import com.yc.dojo.sampleorderservice.repository.OrderRepository;
+import com.yc.dojo.sampleorderservice.service.OrderPersistService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,10 +24,10 @@ import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static java.util.stream.Collectors.toList;
 
@@ -35,15 +37,19 @@ public class OrderController {
 
     private final OrderRepository orderRepository;
     private final ItemRepository itemRepository;
+    private final Consumer<OrderRequest> persistService;
     
     @Autowired
-    public OrderController(OrderRepository orderRepository, ItemRepository itemRepository) {
+    public OrderController(OrderRepository orderRepository, ItemRepository itemRepository,
+                           @Qualifier("orderPersistService") Consumer<OrderRequest> persistService) {
         this.orderRepository = orderRepository;
         this.itemRepository = itemRepository;
+        this.persistService = persistService;
     }
     
     @RequestMapping(value = "/order", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity createOrder(@Valid @RequestBody OrderRequest orderRequest) {
+        this.persistService.accept(orderRequest);
         return ResponseEntity.accepted().build();
     }
     
