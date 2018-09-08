@@ -17,7 +17,7 @@ public class Order {
     private String customer;
     
     @CreationTimestamp
-    @Column(updatable = false)
+    @Column(name="created_at", updatable = false)
     private Instant created;
     
     public Integer getId() {

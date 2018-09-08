@@ -21,7 +21,7 @@ public class Item {
     private Integer amount;
     
     @CreationTimestamp
-    @Column(updatable = false)
+    @Column(name="created_at", updatable = false)
     private Instant created;
     
     public Integer getId() {
