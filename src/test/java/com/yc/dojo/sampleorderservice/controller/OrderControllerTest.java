@@ -3,9 +3,9 @@ package com.yc.dojo.sampleorderservice.controller;
 import com.yc.dojo.sampleorderservice.controller.request.Item;
 import com.yc.dojo.sampleorderservice.controller.request.OrderRequest;
 import com.yc.dojo.sampleorderservice.controller.response.OrderDetailResponse;
-import com.yc.dojo.sampleorderservice.controller.response.OrderItem;
 import com.yc.dojo.sampleorderservice.controller.response.OrderListResponse;
 import com.yc.dojo.sampleorderservice.controller.response.OrderSummary;
+import com.yc.dojo.sampleorderservice.model.Order;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.ResponseEntity;
@@ -15,10 +15,12 @@ import java.math.BigInteger;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
+import static java.util.Collections.emptyList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 import static org.springframework.http.HttpStatus.ACCEPTED;
 import static org.springframework.http.HttpStatus.OK;
 
@@ -28,6 +30,9 @@ public class OrderControllerTest {
     private List<Item> items;
     private OrderController controller;
     
+    private TestOrderRepository testOrderRepository;
+    private TestItemRepository testItemRepository;
+    
     @Before
     public void setUp() throws Exception {
         items = Arrays.asList(createItem("apple", 10), createItem("banana", 20));
@@ -36,7 +41,10 @@ public class OrderControllerTest {
         orderRequest.setItems(items);
         orderRequest.setCustomer("sample-customer");
     
-        controller = new OrderController();
+        testOrderRepository = new TestOrderRepository();
+        testItemRepository = new TestItemRepository();
+        
+        controller = new OrderController(testOrderRepository, testItemRepository);
     }
     
     @Test
@@ -49,10 +57,12 @@ public class OrderControllerTest {
     
     @Test
     public void shouldReturnOrderList() {
-        List<OrderSummary> summaries = Arrays.asList(
-                new OrderSummary(1, FAKE_INSTANT),
-                new OrderSummary(5, FAKE_INSTANT)
+        List<Order> orders = Arrays.asList(
+                createSampleOrder("sample-customer"),
+                createSampleOrder("sample-customer")
         );
+        
+        testOrderRepository.setSampleOrders(orders);
         
         ResponseEntity<OrderListResponse> responseEntity = controller.getOrderList("sample-customer");
         
@@ -60,23 +70,67 @@ public class OrderControllerTest {
         
         OrderListResponse orderList = responseEntity.getBody();
         assertThat(orderList.getCount(), is(2));
-        assertThat(orderList.getOrderSummaries(), is(summaries));
+        orderList.getOrderSummaries().forEach(s -> assertThat(s, is(new OrderSummary(1, FAKE_INSTANT))));
+    }
+    
+    private Order createSampleOrder(String customer) {
+        Order order = new Order();
+        order.setCustomer(customer);
+        order.setId(1);
+        order.setCreated(FAKE_INSTANT);
+        return order;
+    }
+    
+    @Test
+    public void shouldReturnEmptyList() {
+        testOrderRepository.setSampleOrders(emptyList());
+        ResponseEntity<OrderListResponse> responseEntity = controller.getOrderList("sample-customer");
+    
+        assertThat(responseEntity.getStatusCode(), is(OK));
+        OrderListResponse orderList = responseEntity.getBody();
+        assertThat(orderList.getCount(), is(0));
     }
     
     @Test
     public void shouldReturnOrderDetail() {
-        List<OrderItem> orders = Arrays.asList(
-                new OrderItem("apple", 10, new BigDecimal(BigInteger.valueOf(1000), 2)),
-                new OrderItem("banana", 22, new BigDecimal(BigInteger.valueOf(2200), 2))
+        Order order = new Order();
+        order.setId(1);
+        order.setCustomer("sample-customer");
+        order.setCreated(FAKE_INSTANT);
+    
+        testOrderRepository.setSampleOrder(Optional.of(order));
+    
+        List<com.yc.dojo.sampleorderservice.model.Item> items = Arrays.asList(
+                createModelItem("apple"),
+                createModelItem("banana")
         );
         
-        ResponseEntity<OrderDetailResponse> responseEntity = controller.getOrderDetail("sample-customer", 20);
+        testItemRepository.setSampleItems(items);
+        
+        ResponseEntity<OrderDetailResponse> responseEntity = controller.getOrderDetail("sample-customer", 1);
     
         OrderDetailResponse orderDetailResponse = responseEntity.getBody();
         assertThat(responseEntity.getStatusCode(), is(OK));
-        assertThat(orderDetailResponse.getTotalPrice(), is(new BigDecimal(BigInteger.valueOf(3200), 2)));
-        assertThat(orderDetailResponse.getOrderItems(), is(orders));
+        assertThat(orderDetailResponse.getTotalPrice(), is(new BigDecimal(BigInteger.valueOf(2000), 2)));
         assertThat(orderDetailResponse.getCreated(), is(FAKE_INSTANT));
+    }
+    
+    @Test
+    public void shouldReturnIfOrderNotFound() {
+        ResponseEntity<OrderDetailResponse> responseEntity = controller.getOrderDetail("sample-customer", 1);
+        OrderDetailResponse orderDetailResponse = responseEntity.getBody();
+        assertThat(responseEntity.getStatusCode(), is(OK));
+        assertThat(orderDetailResponse.getTotalPrice(), is(new BigDecimal(BigInteger.valueOf(0), 0)));
+        assertThat(orderDetailResponse.getCreated(), is(nullValue()));
+        
+    }
+    
+    private com.yc.dojo.sampleorderservice.model.Item createModelItem(String name) {
+        com.yc.dojo.sampleorderservice.model.Item item = new com.yc.dojo.sampleorderservice.model.Item();
+        item.setAmount(10);
+        item.setName(name);
+        item.setCreated(FAKE_INSTANT);
+        return item;
     }
     
     private Item createItem(String name, Integer amount) {
