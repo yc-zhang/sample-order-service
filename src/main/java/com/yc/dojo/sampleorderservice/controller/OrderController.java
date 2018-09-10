@@ -22,7 +22,7 @@ public class OrderController {
     public ResponseEntity listOrder(@PathVariable String user) {
         return ResponseEntity.ok("{\"count\": 2, \"orders\": [{\"id\": 1, \"created\": \"2018\"}, {\"id\": 2, \"created\": \"2019\"} ] }");
     }
-    
+
     @RequestMapping(value = "/{user}/order/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity fetchOrderDetail(@PathVariable String user, @PathVariable Integer id) {
         return ResponseEntity.ok("{\n" +
@@ -42,5 +42,5 @@ public class OrderController {
                 "    \"totalPrice\": 32.0\n" +
                 "}");
     }
-    
+
 }

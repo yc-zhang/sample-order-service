@@ -43,4 +43,35 @@ public class OrderControllerTest {
         item.setName(name);
         return item;
     }
+    
+    @Test
+    public void shouldReturnListOrder() {
+        OrderController controller = new OrderController();
+        ResponseEntity responseEntity = controller.listOrder("someone");
+        String body = (String) responseEntity.getBody();
+        assertThat(body, is("{\"count\": 2, \"orders\": [{\"id\": 1, \"created\": \"2018\"}, {\"id\": 2, \"created\": \"2019\"} ] }"));
+    }
+    
+    @Test
+    public void shouldReturnOrderDetail() {
+        OrderController controller = new OrderController();
+        ResponseEntity responseEntity = controller.fetchOrderDetail("someone", 10);
+        String body = (String) responseEntity.getBody();
+        assertThat(body, is("{\n" +
+                "    \"created\": \"2018-08-15T17:19:21.000Z\",\n" +
+                "    \"orders\": [\n" +
+                "        {\n" +
+                "            \"amount\": 10,\n" +
+                "            \"name\": \"apple\",\n" +
+                "            \"totalPrice\": 10.0\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"amount\": 22,\n" +
+                "            \"name\": \"banana\",\n" +
+                "            \"totalPrice\": 22.0\n" +
+                "        }\n" +
+                "    ],\n" +
+                "    \"totalPrice\": 32.0\n" +
+                "}"));
+    }
 }
